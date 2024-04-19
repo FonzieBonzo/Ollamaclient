@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34728.123
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ollamaclient", "Ollamaclient.csproj", "{BC5A0B79-1DA1-4246-A9A2-A4FAE56B21BF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BC5A0B79-1DA1-4246-A9A2-A4FAE56B21BF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BC5A0B79-1DA1-4246-A9A2-A4FAE56B21BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BC5A0B79-1DA1-4246-A9A2-A4FAE56B21BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BC5A0B79-1DA1-4246-A9A2-A4FAE56B21BF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {69842B78-D0EC-446C-849D-756F04FABBA8}
+	EndGlobalSection
+EndGlobal
