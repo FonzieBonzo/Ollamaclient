@@ -31,9 +31,9 @@ namespace Ollamaclient
             // https://github.com/MediatedCommunications/WindowsInput
             // https://github.com/awaescher/OllamaSharp
 
-            DBFunct.DBInit();
+           // DBFunct.DBInit();
 
-            //InitializeAsync().ConfigureAwait(true).GetAwaiter().GetResult();
+          
 
             InitializeAsync();
 
@@ -56,15 +56,24 @@ namespace Ollamaclient
         private async void InitOllama()
         {
             var uri = new Uri(tbOllamaURL.Text);
-            ollama = new OllamaApiClient(uri);
-            var localModels = await ollama.ListLocalModels();
-            // await ollama.PullModel("mistral", status => Console.WriteLine($"({status.Percent}%) {status.Status}"));
-            cbModel.Items.Clear();
-
-            foreach (var model in localModels.ToList())
+            try
             {
-                cbModel.Items.Add(model.Name);
+                ollama = new OllamaApiClient(uri);
+                var localModels = await ollama.ListLocalModels();
+                cbModel.Items.Clear();
+                foreach (var model in localModels.ToList())
+                {
+                    cbModel.Items.Add(model.Name);
+                }
             }
+            catch (Exception ex)
+            {
+                // Append the error message to the TextBox's Text property
+                textBoxLog.Text += ex.Message + Environment.NewLine + "\r\n";
+            }
+
+            // await ollama.PullModel("mistral", status => Console.WriteLine($"({status.Percent}%) {status.Status}"));
+
             //  cbModel.DataSource=(localModels.ToList());
         }
 
@@ -83,8 +92,11 @@ namespace Ollamaclient
                     switch (i)
                     {
                         case 1:
+                            presetRec.Id = i;
                             presetRec.Modal = "mistral:latest";
                             presetRec.Prompt = "Fix all typos and casing and punctuation in this text, but preserve all new line characters:\r\n\"{input}\"\r\nReturn only the corrected text, don't include a preamble";
+                           
+                            DBFunct.PresetRecAddUpdate(presetRec);  
                             break;
 
                         default:
@@ -188,11 +200,7 @@ namespace Ollamaclient
             Keyboard = null;
         }
 
-        private async void button1_Click(object sender, EventArgs e)
-        {
-            _ = await DBFunct.SettingSet(new SettingRec { Name = "OllamaURL", ValueString = tbOllamaURL.Text });
-            InitOllama();
-        }
+        
 
         private async void btnSave_Click(object sender, EventArgs e)
         {
@@ -219,6 +227,12 @@ namespace Ollamaclient
                 cbModel.Text = presetRec.Modal;
                 tbPrompt.Text = presetRec.Prompt;
             }
+        }
+
+        private async void btnSaveURL_Click(object sender, EventArgs e)
+        {
+            _ = await DBFunct.SettingSet(new SettingRec { Name = "OllamaURL", ValueString = tbOllamaURL.Text });
+            InitOllama();
         }
     }
 }

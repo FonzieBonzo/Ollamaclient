@@ -33,7 +33,7 @@
             label1 = new Label();
             tbOllamaURL = new TextBox();
             cbLog = new CheckBox();
-            button1 = new Button();
+            btnSaveURL = new Button();
             panel1 = new Panel();
             btnSave = new Button();
             label4 = new Label();
@@ -81,15 +81,15 @@
             cbLog.Text = "Log";
             cbLog.UseVisualStyleBackColor = true;
             // 
-            // button1
+            // btnSaveURL
             // 
-            button1.Location = new Point(739, 19);
-            button1.Name = "button1";
-            button1.Size = new Size(50, 23);
-            button1.TabIndex = 11;
-            button1.Text = "Ok";
-            button1.UseVisualStyleBackColor = true;
-            button1.Click += button1_Click;
+            btnSaveURL.Location = new Point(739, 19);
+            btnSaveURL.Name = "btnSaveURL";
+            btnSaveURL.Size = new Size(50, 23);
+            btnSaveURL.TabIndex = 11;
+            btnSaveURL.Text = "Ok";
+            btnSaveURL.UseVisualStyleBackColor = true;
+            btnSaveURL.Click += btnSaveURL_Click;
             // 
             // panel1
             // 
@@ -114,6 +114,7 @@
             btnSave.TabIndex = 19;
             btnSave.Text = "Ok";
             btnSave.UseVisualStyleBackColor = true;
+            btnSave.Click += btnSave_Click;
             // 
             // label4
             // 
@@ -167,6 +168,7 @@
             cbALT.Name = "cbALT";
             cbALT.Size = new Size(674, 23);
             cbALT.TabIndex = 13;
+            cbALT.SelectedIndexChanged += cbALT_SelectedIndexChanged;
             // 
             // FormMain
             // 
@@ -174,7 +176,7 @@
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(858, 565);
             Controls.Add(panel1);
-            Controls.Add(button1);
+            Controls.Add(btnSaveURL);
             Controls.Add(cbLog);
             Controls.Add(tbOllamaURL);
             Controls.Add(label1);
@@ -197,7 +199,7 @@
         private TextBox tbOllamaURL;
         private Label label5;
         private CheckBox cbLog;
-        private Button button1;
+        private Button btnSaveURL;
         private Panel panel1;
         private Button btnSave;
         private Label label4;
