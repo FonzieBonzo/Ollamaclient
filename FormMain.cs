@@ -108,6 +108,14 @@ namespace Ollamaclient
                             presetRec.Keys = "ALT + " + i.ToString();
                             await DBFunct.PresetRecAddUpdate(presetRec);
                             break;
+                        case 3:
+                            presetRec.Id = i;
+                            presetRec.Modal = "codegemma:latest";
+                            presetRec.Prompt = "Optimize and fix if needed the code folowing code \"{input}\"\r\ndon't include a preamble and give only the code as plain text";
+                            presetRec.Keys = "ALT + " + i.ToString();
+                            await DBFunct.PresetRecAddUpdate(presetRec);
+                            break;
+                        
                         default:
                             break;
                     }
@@ -212,6 +220,9 @@ namespace Ollamaclient
         private async Task<string> AskOllama(string TheInput, PresetRec presetRec)
         {
             ollama.SelectedModel = presetRec.Modal;
+           
+
+
 
             string ThePrompt = presetRec.Prompt.Replace("{input}", TheInput);
 
@@ -222,7 +233,14 @@ namespace Ollamaclient
             {
                 responseBuilder.Append(stream.Response);
             });
-            return responseBuilder.ToString().Trim();
+
+            string AsString = responseBuilder.ToString().Trim();
+
+            // Remove extra "'''" characters from the response
+            AsString = AsString.Replace("```csharp", "");
+            AsString = AsString.Replace("```", "");
+
+            return AsString;
         }
 
         private void Log<T>(EventSourceEventArgs<T> e, string Notes = "") where T : InputEvent
@@ -256,6 +274,7 @@ namespace Ollamaclient
             PresetInProgress = true;
             PresetRec presetRec = (PresetRec)cbALT.SelectedItem;
             //presetRec.Id = cbALT.SelectedIndex + 1;
+            presetRec.Id = cbALT.SelectedIndex + 1;
             presetRec.Modal = cbModel.Text;
             presetRec.Prompt = tbPrompt.Text;
             cbALT.Items[cbALT.SelectedIndex] = presetRec;
