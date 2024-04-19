@@ -99,9 +99,15 @@ namespace Ollamaclient
                             presetRec.Modal = "mistral:latest";
                             presetRec.Prompt = "Fix all typos and casing and punctuation in this text, but preserve all new line characters:\r\n\"{input}\"\r\nReturn only the corrected text, don't include a preamble";
                             presetRec.Keys = "ALT + " + i.ToString();
-                            DBFunct.PresetRecAddUpdate(presetRec);  
+                             await DBFunct.PresetRecAddUpdate(presetRec);  
                             break;
-
+                        case 2:
+                            presetRec.Id = i;
+                            presetRec.Modal = "codegemma:latest";
+                            presetRec.Prompt = "Fix all typos and casing and punctuation in this text in dutch, but preserve all new line characters:\r\n\"{input}\"\r\nReturn only the corrected text, don't include a preamble";
+                            presetRec.Keys = "ALT + " + i.ToString();
+                            await DBFunct.PresetRecAddUpdate(presetRec);
+                            break;
                         default:
                             break;
                     }
@@ -134,6 +140,46 @@ namespace Ollamaclient
                 {
                     textBoxLog.Text = textBoxLog.Text + "ALT+1\r\n";
                     UsePreset = (PresetRec)cbALT.Items[0];
+                }
+                if (e.Data?.KeyDown?.Key == WindowsInput.Events.KeyCode.D2)
+                {
+                    textBoxLog.Text = textBoxLog.Text + "ALT+1\r\n";
+                    UsePreset = (PresetRec)cbALT.Items[1];
+                }
+                if (e.Data?.KeyDown?.Key == WindowsInput.Events.KeyCode.D3)
+                {
+                    textBoxLog.Text = textBoxLog.Text + "ALT+1\r\n";
+                    UsePreset = (PresetRec)cbALT.Items[2];
+                }
+                if (e.Data?.KeyDown?.Key == WindowsInput.Events.KeyCode.D4)
+                {
+                    textBoxLog.Text = textBoxLog.Text + "ALT+1\r\n";
+                    UsePreset = (PresetRec)cbALT.Items[3];
+                }
+                if (e.Data?.KeyDown?.Key == WindowsInput.Events.KeyCode.D5)
+                {
+                    textBoxLog.Text = textBoxLog.Text + "ALT+1\r\n";
+                    UsePreset = (PresetRec)cbALT.Items[4];
+                }
+                if (e.Data?.KeyDown?.Key == WindowsInput.Events.KeyCode.D6)
+                {
+                    textBoxLog.Text = textBoxLog.Text + "ALT+1\r\n";
+                    UsePreset = (PresetRec)cbALT.Items[5];
+                }
+                if (e.Data?.KeyDown?.Key == WindowsInput.Events.KeyCode.D7)
+                {
+                    textBoxLog.Text = textBoxLog.Text + "ALT+1\r\n";
+                    UsePreset = (PresetRec)cbALT.Items[6];
+                }
+                if (e.Data?.KeyDown?.Key == WindowsInput.Events.KeyCode.D8)
+                {
+                    textBoxLog.Text = textBoxLog.Text + "ALT+1\r\n";
+                    UsePreset = (PresetRec)cbALT.Items[7];
+                }
+                if (e.Data?.KeyDown?.Key == WindowsInput.Events.KeyCode.D9)
+                {
+                    textBoxLog.Text = textBoxLog.Text + "ALT+1\r\n";
+                    UsePreset = (PresetRec)cbALT.Items[8];
                 }
             }
 
