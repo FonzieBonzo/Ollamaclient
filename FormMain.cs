@@ -53,7 +53,7 @@ namespace Ollamaclient
             Keyboard.KeyEvent += this.Keyboard_KeyEvent;
         }
 
-        private async void InitOllama()
+        private async Task InitOllama()
         {
             var uri = new Uri(tbOllamaURL.Text);
             try
@@ -69,8 +69,11 @@ namespace Ollamaclient
             catch (Exception ex)
             {
                 // Append the error message to the TextBox's Text property
-                textBoxLog.Text += ex.Message + Environment.NewLine + "\r\n";
+                textBoxLog.Text += "Error connecting to Ollama server with message \""+ex.Message + Environment.NewLine + "\"\r\n";
+                return;
             }
+
+            textBoxLog.Text +=  "Connected to Ollama server\r\n";
 
             // await ollama.PullModel("mistral", status => Console.WriteLine($"({status.Percent}%) {status.Status}"));
 
@@ -95,7 +98,7 @@ namespace Ollamaclient
                             presetRec.Id = i;
                             presetRec.Modal = "mistral:latest";
                             presetRec.Prompt = "Fix all typos and casing and punctuation in this text, but preserve all new line characters:\r\n\"{input}\"\r\nReturn only the corrected text, don't include a preamble";
-                           
+                            presetRec.Keys = "ALT + " + i.ToString();
                             DBFunct.PresetRecAddUpdate(presetRec);  
                             break;
 
@@ -232,7 +235,7 @@ namespace Ollamaclient
         private async void btnSaveURL_Click(object sender, EventArgs e)
         {
             _ = await DBFunct.SettingSet(new SettingRec { Name = "OllamaURL", ValueString = tbOllamaURL.Text });
-            InitOllama();
+            await InitOllama();
         }
     }
 }
