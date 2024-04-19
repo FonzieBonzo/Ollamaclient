@@ -129,10 +129,8 @@ namespace Ollamaclient
 
         private async void Keyboard_KeyEvent(object sender, EventSourceEventArgs<KeyboardEvent> e)
         {
-            if (e.Data?.KeyDown?.Key == WindowsInput.Events.KeyCode.LAlt) ALT_Pressed = true;         
-
-            if (e.Data?.KeyUp?.Key == WindowsInput.Events.KeyCode.LAlt) ALT_Pressed = false;
-            
+            if (e.Data?.KeyDown?.Key == WindowsInput.Events.KeyCode.LAlt) ALT_Pressed = true;   
+            if (e.Data?.KeyUp?.Key == WindowsInput.Events.KeyCode.LAlt) ALT_Pressed = false;            
 
             if (keyBussy) return;
 
@@ -144,9 +142,7 @@ namespace Ollamaclient
                     textBoxLog.Text += $"ALT+{index + 1}\r\n";
                     UsePreset = (PresetRec)cbALT.Items[index];
                 }
-            }
-
-           
+            }           
 
             if (UsePreset != null && ALT_Pressed == false)
             {
@@ -209,19 +205,13 @@ namespace Ollamaclient
             NewContent += "\r\n";
 
             textBoxLog.Text = NewContent + textBoxLog.Text;
-        }
-
-        private void Form1_Load(object sender, EventArgs e)
-        {
-        }
+        }        
 
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
         {
             Keyboard?.Dispose();
             Keyboard = null;
-        }
-
-        
+        }        
 
         private async void btnSave_Click(object sender, EventArgs e)
         {
