@@ -1,5 +1,6 @@
 using Ollamaclient.SQLiteDatabase;
 using OllamaSharp;
+using System.Collections.Generic;
 using System.Text;
 using WindowsInput.Events;
 using WindowsInput.Events.Sources;
@@ -14,7 +15,9 @@ namespace Ollamaclient
         private PresetRec UsePreset = null;
 
         private SQLiteFunctions DBFunct = SQLiteFunctions.Instance;
-        private GlobalStuff GS = GlobalStuff.Instance;
+
+        private Dictionary<WindowsInput.Events.KeyCode, int> keyMap;
+
 
         //var uri = new Uri("http://localhost:11434");
         private OllamaApiClient ollama;
@@ -30,24 +33,27 @@ namespace Ollamaclient
             InitializeComponent();
             // https://github.com/MediatedCommunications/WindowsInput
             // https://github.com/awaescher/OllamaSharp
-
-           // DBFunct.DBInit();
-
-          
-
             InitializeAsync();
 
-            //lbOnlineAgents.Items.Clear();
-            //lbOnlineAgents.CustomTabOffsets.Clear();
-            //lbOnlineAgents.UseCustomTabOffsets = true;
-            //lbOnlineAgents.CustomTabOffsets.Add(95);
+
+
+            keyMap = new Dictionary<WindowsInput.Events.KeyCode, int>
+            {
+                {WindowsInput.Events.KeyCode.D1, 0},
+                {WindowsInput.Events.KeyCode.D2, 1},
+                {WindowsInput.Events.KeyCode.D3, 2},
+                {WindowsInput.Events.KeyCode.D4, 3},
+                {WindowsInput.Events.KeyCode.D5, 4},
+                {WindowsInput.Events.KeyCode.D6, 5},
+                {WindowsInput.Events.KeyCode.D7, 6},
+                {WindowsInput.Events.KeyCode.D8, 7},
+                {WindowsInput.Events.KeyCode.D9, 8}
+            };
 
             cbALT.DisplayMember = "Keys";
-            cbALT.ValueMember = "Id";
+            cbALT.ValueMember = "Id";            
 
-            // Add "ALT + 1" to "ALT + 9" to the ComboBox
-
-            Keyboard = default(IKeyboardEventSource);
+            Keyboard =  default(IKeyboardEventSource);
 
             Keyboard = WindowsInput.Capture.Global.Keyboard();
             Keyboard.KeyEvent += this.Keyboard_KeyEvent;
@@ -67,17 +73,12 @@ namespace Ollamaclient
                 }
             }
             catch (Exception ex)
-            {
-                // Append the error message to the TextBox's Text property
+            {                
                 textBoxLog.Text += "Error connecting to Ollama server with message \""+ex.Message + Environment.NewLine + "\"\r\n";
                 return;
             }
 
-            textBoxLog.Text +=  "Connected to Ollama server\r\n";
-
-            // await ollama.PullModel("mistral", status => Console.WriteLine($"({status.Percent}%) {status.Status}"));
-
-            //  cbModel.DataSource=(localModels.ToList());
+            textBoxLog.Text +=  "Connected to Ollama server\r\n";          
         }
 
         private async Task InitializeAsync()
@@ -128,68 +129,24 @@ namespace Ollamaclient
 
         private async void Keyboard_KeyEvent(object sender, EventSourceEventArgs<KeyboardEvent> e)
         {
-            if (e.Data?.KeyDown?.Key == WindowsInput.Events.KeyCode.LAlt)
-            {
-                ALT_Pressed = true;
-                // textBoxLog.Text = textBoxLog.Text + "ALT pressed";
-            }
+            if (e.Data?.KeyDown?.Key == WindowsInput.Events.KeyCode.LAlt) ALT_Pressed = true;         
 
-            if (e.Data?.KeyUp?.Key == WindowsInput.Events.KeyCode.LAlt)
-            {
-                ALT_Pressed = false;
-                // textBoxLog.Text = textBoxLog.Text +"ALT released";
-            }
+            if (e.Data?.KeyUp?.Key == WindowsInput.Events.KeyCode.LAlt) ALT_Pressed = false;
+            
 
             if (keyBussy) return;
 
             if (ALT_Pressed)
             {
-                if (e.Data?.KeyDown?.Key == WindowsInput.Events.KeyCode.D1)
+                if (e.Data?.KeyDown?.Key != null && keyMap.ContainsKey((KeyCode)(e.Data?.KeyDown?.Key)))
                 {
-                    textBoxLog.Text = textBoxLog.Text + "ALT+1\r\n";
-                    UsePreset = (PresetRec)cbALT.Items[0];
-                }
-                if (e.Data?.KeyDown?.Key == WindowsInput.Events.KeyCode.D2)
-                {
-                    textBoxLog.Text = textBoxLog.Text + "ALT+1\r\n";
-                    UsePreset = (PresetRec)cbALT.Items[1];
-                }
-                if (e.Data?.KeyDown?.Key == WindowsInput.Events.KeyCode.D3)
-                {
-                    textBoxLog.Text = textBoxLog.Text + "ALT+1\r\n";
-                    UsePreset = (PresetRec)cbALT.Items[2];
-                }
-                if (e.Data?.KeyDown?.Key == WindowsInput.Events.KeyCode.D4)
-                {
-                    textBoxLog.Text = textBoxLog.Text + "ALT+1\r\n";
-                    UsePreset = (PresetRec)cbALT.Items[3];
-                }
-                if (e.Data?.KeyDown?.Key == WindowsInput.Events.KeyCode.D5)
-                {
-                    textBoxLog.Text = textBoxLog.Text + "ALT+1\r\n";
-                    UsePreset = (PresetRec)cbALT.Items[4];
-                }
-                if (e.Data?.KeyDown?.Key == WindowsInput.Events.KeyCode.D6)
-                {
-                    textBoxLog.Text = textBoxLog.Text + "ALT+1\r\n";
-                    UsePreset = (PresetRec)cbALT.Items[5];
-                }
-                if (e.Data?.KeyDown?.Key == WindowsInput.Events.KeyCode.D7)
-                {
-                    textBoxLog.Text = textBoxLog.Text + "ALT+1\r\n";
-                    UsePreset = (PresetRec)cbALT.Items[6];
-                }
-                if (e.Data?.KeyDown?.Key == WindowsInput.Events.KeyCode.D8)
-                {
-                    textBoxLog.Text = textBoxLog.Text + "ALT+1\r\n";
-                    UsePreset = (PresetRec)cbALT.Items[7];
-                }
-                if (e.Data?.KeyDown?.Key == WindowsInput.Events.KeyCode.D9)
-                {
-                    textBoxLog.Text = textBoxLog.Text + "ALT+1\r\n";
-                    UsePreset = (PresetRec)cbALT.Items[8];
+                    var index = keyMap[e.Data.KeyDown.Key];
+                    textBoxLog.Text += $"ALT+{index + 1}\r\n";
+                    UsePreset = (PresetRec)cbALT.Items[index];
                 }
             }
+
+           
 
             if (UsePreset != null && ALT_Pressed == false)
             {
@@ -219,10 +176,7 @@ namespace Ollamaclient
 
         private async Task<string> AskOllama(string TheInput, PresetRec presetRec)
         {
-            ollama.SelectedModel = presetRec.Modal;
-           
-
-
+            ollama.SelectedModel = presetRec.Modal;  
 
             string ThePrompt = presetRec.Prompt.Replace("{input}", TheInput);
 
@@ -272,8 +226,7 @@ namespace Ollamaclient
         private async void btnSave_Click(object sender, EventArgs e)
         {
             PresetInProgress = true;
-            PresetRec presetRec = (PresetRec)cbALT.SelectedItem;
-            //presetRec.Id = cbALT.SelectedIndex + 1;
+            PresetRec presetRec = (PresetRec)cbALT.SelectedItem;            
             presetRec.Id = cbALT.SelectedIndex + 1;
             presetRec.Modal = cbModel.Text;
             presetRec.Prompt = tbPrompt.Text;
