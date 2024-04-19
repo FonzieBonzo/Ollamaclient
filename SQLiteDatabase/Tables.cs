@@ -1,15 +1,9 @@
 ﻿using SQLite;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Ollamaclient.SQLiteDatabase
 {
     public class Tables
     {
-
         public class SettingRec
         {
             [PrimaryKey]
@@ -26,11 +20,11 @@ namespace Ollamaclient.SQLiteDatabase
         {
             [PrimaryKey]
             public long Id { get; set; }
+
             public string Modal { get; set; }
             public string Prompt { get; set; }
-           
-            public string Keys { get; set; }
 
+            public string Keys { get; set; }
         }
     }
 }

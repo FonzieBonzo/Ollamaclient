@@ -1,17 +1,13 @@
-
-
 using Ollamaclient.SQLiteDatabase;
 using OllamaSharp;
-using OllamaSharp.Models;
 using System.Text;
-using System.Windows.Navigation;
 using WindowsInput.Events;
 using WindowsInput.Events.Sources;
 using static Ollamaclient.SQLiteDatabase.Tables;
 
 namespace Ollamaclient
 {
-    public partial class Form1 : Form
+    public partial class FormMain : Form
     {
         // private IKeyboardEventSource m_Keyboard;
 
@@ -29,9 +25,7 @@ namespace Ollamaclient
 
         private bool keyBussy;
 
-        
-
-        public Form1()
+        public FormMain()
         {
             InitializeComponent();
             // https://github.com/MediatedCommunications/WindowsInput
@@ -130,7 +124,7 @@ namespace Ollamaclient
 
             if (UsePreset != null && ALT_Pressed == false)
             {
-                keyBussy = true;  
+                keyBussy = true;
                 Thread.Sleep(600);
                 await WindowsInput.Simulate.Events()
                 .ClickChord(KeyCode.LControl, KeyCode.C).Wait(50)
@@ -147,7 +141,7 @@ namespace Ollamaclient
                         .ClickChord(KeyCode.LControl, KeyCode.V).Wait(50)
                         .Invoke();
                     }
-                }              
+                }
                 UsePreset = null;
                 keyBussy = false;
             }

@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationIcon>resources\Ava1219-Littlear-Ai.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
