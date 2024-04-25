@@ -184,10 +184,7 @@ namespace Ollamaclient
             var OllamaResult = await ollama.StreamCompletion(ThePrompt, context, stream =>
             {
                 responseBuilder.Append(stream.Response);
-            });
-
-            
-            
+            });             
            
 
             return RemoveFirstAndLastQuotes(responseBuilder.ToString().Trim());
