@@ -185,6 +185,7 @@
             Name = "FormMain";
             Text = "OllamaClient";
             FormClosed += Form1_FormClosed;
+            Load += FormMain_Load;
             panel1.ResumeLayout(false);
             panel1.PerformLayout();
             ResumeLayout(false);

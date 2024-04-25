@@ -1,9 +1,11 @@
 using Ollamaclient.SQLiteDatabase;
 using OllamaSharp;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using WindowsInput.Events;
 using WindowsInput.Events.Sources;
+using WindowsInput.Native;
 using static Ollamaclient.SQLiteDatabase.Tables;
 
 namespace Ollamaclient
@@ -51,9 +53,9 @@ namespace Ollamaclient
             };
 
             cbALT.DisplayMember = "Keys";
-            cbALT.ValueMember = "Id";            
+            cbALT.ValueMember = "Id";
 
-            Keyboard =  default(IKeyboardEventSource);
+            Keyboard = default(IKeyboardEventSource);
 
             Keyboard = WindowsInput.Capture.Global.Keyboard();
             Keyboard.KeyEvent += this.Keyboard_KeyEvent;
@@ -73,12 +75,12 @@ namespace Ollamaclient
                 }
             }
             catch (Exception ex)
-            {                
-                textBoxLog.Text += "Error connecting to Ollama server with message \""+ex.Message + Environment.NewLine + "\"\r\n";
+            {
+                textBoxLog.Text += "Error connecting to Ollama server with message \"" + ex.Message + Environment.NewLine + "\"\r\n";
                 return;
             }
 
-            textBoxLog.Text +=  "Connected to Ollama server\r\n";          
+            textBoxLog.Text += "Connected to Ollama server\r\n";
         }
 
         private async Task InitializeAsync()
@@ -100,7 +102,7 @@ namespace Ollamaclient
                             presetRec.Modal = "mistral:latest";
                             presetRec.Prompt = "Fix all typos and casing and punctuation in this text, but preserve all new line characters:\r\n\"{input}\"\r\nReturn only the corrected text, don't include a preamble";
                             presetRec.Keys = "ALT + " + i.ToString();
-                             await DBFunct.PresetRecAddUpdate(presetRec);  
+                            await DBFunct.PresetRecAddUpdate(presetRec);
                             break;
                         case 2:
                             presetRec.Id = i;
@@ -116,7 +118,7 @@ namespace Ollamaclient
                             presetRec.Keys = "ALT + " + i.ToString();
                             await DBFunct.PresetRecAddUpdate(presetRec);
                             break;
-                        
+
                         default:
                             break;
                     }
@@ -129,8 +131,8 @@ namespace Ollamaclient
 
         private async void Keyboard_KeyEvent(object sender, EventSourceEventArgs<KeyboardEvent> e)
         {
-            if (e.Data?.KeyDown?.Key == WindowsInput.Events.KeyCode.LAlt) ALT_Pressed = true;   
-            if (e.Data?.KeyUp?.Key == WindowsInput.Events.KeyCode.LAlt) ALT_Pressed = false;            
+            if (e.Data?.KeyDown?.Key == WindowsInput.Events.KeyCode.LAlt) ALT_Pressed = true;
+            if (e.Data?.KeyUp?.Key == WindowsInput.Events.KeyCode.LAlt) ALT_Pressed = false;
 
             if (keyBussy) return;
 
@@ -142,7 +144,7 @@ namespace Ollamaclient
                     textBoxLog.Text += $"ALT+{index + 1}\r\n";
                     UsePreset = (PresetRec)cbALT.Items[index];
                 }
-            }           
+            }
 
             if (UsePreset != null && ALT_Pressed == false)
             {
@@ -172,7 +174,7 @@ namespace Ollamaclient
 
         private async Task<string> AskOllama(string TheInput, PresetRec presetRec)
         {
-            ollama.SelectedModel = presetRec.Modal;  
+            ollama.SelectedModel = presetRec.Modal;
 
             string ThePrompt = presetRec.Prompt.Replace("{input}", TheInput);
 
@@ -184,13 +186,11 @@ namespace Ollamaclient
                 responseBuilder.Append(stream.Response);
             });
 
-            string AsString = responseBuilder.ToString().Trim();
+            
+            
+           
 
-            // Remove extra "'''" characters from the response
-            AsString = AsString.Replace("```csharp", "");
-            AsString = AsString.Replace("```", "");
-
-            return AsString;
+            return RemoveFirstAndLastQuotes(responseBuilder.ToString().Trim());
         }
 
         private void Log<T>(EventSourceEventArgs<T> e, string Notes = "") where T : InputEvent
@@ -205,18 +205,18 @@ namespace Ollamaclient
             NewContent += "\r\n";
 
             textBoxLog.Text = NewContent + textBoxLog.Text;
-        }        
+        }
 
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
         {
             Keyboard?.Dispose();
             Keyboard = null;
-        }        
+        }
 
         private async void btnSave_Click(object sender, EventArgs e)
         {
             PresetInProgress = true;
-            PresetRec presetRec = (PresetRec)cbALT.SelectedItem;            
+            PresetRec presetRec = (PresetRec)cbALT.SelectedItem;
             presetRec.Id = cbALT.SelectedIndex + 1;
             presetRec.Modal = cbModel.Text;
             presetRec.Prompt = tbPrompt.Text;
@@ -244,6 +244,31 @@ namespace Ollamaclient
         {
             _ = await DBFunct.SettingSet(new SettingRec { Name = "OllamaURL", ValueString = tbOllamaURL.Text });
             await InitOllama();
+        }
+
+        private string RemoveFirstAndLastQuotes(string input)
+        {
+
+            string TheReturn=input;
+
+            TheReturn = TheReturn.Replace("```csharp", "");
+            TheReturn = TheReturn.Replace("```", "");
+
+
+            if (TheReturn.Length >= 2 && TheReturn[0] == '"' && TheReturn[^1] == '"')
+            {
+                // Remove leading and trailing quotes
+                TheReturn = TheReturn[1..^1];
+               
+            }
+            return TheReturn.Trim();
+
+
+        }
+
+        private void FormMain_Load(object sender, EventArgs e)
+        {
+
         }
     }
 }
