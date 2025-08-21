@@ -22,9 +22,11 @@ namespace Ollamaclient.SQLiteDatabase
             public long Id { get; set; }
 
             public string Modal { get; set; }
+            public string Rag_index { get; set; }
             public string Prompt { get; set; }
 
             public string Keys { get; set; }
+            public bool Result { get; set; }
         }
     }
 }

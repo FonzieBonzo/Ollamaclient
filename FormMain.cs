@@ -1,8 +1,11 @@
-using Ollamaclient.SQLiteDatabase;
+﻿using Ollamaclient.SQLiteDatabase;
 using OllamaSharp;
+using SQLite;
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Text;
+using System.Text.Json;
 using WindowsInput.Events;
 using WindowsInput.Events.Sources;
 using WindowsInput.Native;
@@ -14,12 +17,15 @@ namespace Ollamaclient
     {
         // private IKeyboardEventSource m_Keyboard;
 
+        private HttpListener? _listener;
+
         private PresetRec UsePreset = null;
 
         private SQLiteFunctions DBFunct = SQLiteFunctions.Instance;
 
         private Dictionary<WindowsInput.Events.KeyCode, int> keyMap;
 
+        public static string DatabasePath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "OllamaClient\\");
 
         //var uri = new Uri("http://localhost:11434");
         private OllamaApiClient ollama;
@@ -37,7 +43,7 @@ namespace Ollamaclient
             // https://github.com/awaescher/OllamaSharp
             InitializeAsync();
 
-
+            LoadRagIndexes();
 
             keyMap = new Dictionary<WindowsInput.Events.KeyCode, int>
             {
@@ -59,6 +65,33 @@ namespace Ollamaclient
 
             Keyboard = WindowsInput.Capture.Global.Keyboard();
             Keyboard.KeyEvent += this.Keyboard_KeyEvent;
+
+            textBoxLog.Text += "Databasedir: " + DatabasePath + "\r\n";
+        }
+
+        private void LoadRagIndexes()
+        {
+            // Zorg dat de map bestaat
+            Directory.CreateDirectory(DatabasePath + "rag_indexs");
+
+            // Leeg eerst de combobox
+            cbRag_index.Items.Clear();
+
+            // Voeg "None" toe als eerste optie
+            cbRag_index.Items.Add("None");
+
+            // Lees alle subfolders
+            string[] folders = Directory.GetDirectories(DatabasePath + "rag_indexs");
+
+            foreach (string folder in folders)
+            {
+                // Haal alleen de foldernaam eruit, niet het hele pad
+                string folderName = Path.GetFileName(folder);
+                cbRag_index.Items.Add(folderName);
+            }
+
+            // Standaard selecteren op "None"
+            cbRag_index.SelectedIndex = 0;
         }
 
         private async Task InitOllama()
@@ -104,6 +137,7 @@ namespace Ollamaclient
                             presetRec.Keys = "ALT + " + i.ToString();
                             await DBFunct.PresetRecAddUpdate(presetRec);
                             break;
+
                         case 2:
                             presetRec.Id = i;
                             presetRec.Modal = "codegemma:latest";
@@ -111,6 +145,7 @@ namespace Ollamaclient
                             presetRec.Keys = "ALT + " + i.ToString();
                             await DBFunct.PresetRecAddUpdate(presetRec);
                             break;
+
                         case 3:
                             presetRec.Id = i;
                             presetRec.Modal = "codegemma:latest";
@@ -156,14 +191,48 @@ namespace Ollamaclient
                 String clipboard = Clipboard.GetText();
                 if (clipboard != null && clipboard != "")
                 {
-                    string ResultOllama = await AskOllama(Clipboard.GetText(), UsePreset);
+                    string ResultOllama = "";
+
+                    if (UsePreset.Rag_index != "None" && UsePreset.Rag_index != "")
+                    {
+                        //Clipboard.GetText() bevat de vraag,
+                        //DatabasePath + "rag_indexs\\EasyFactuur" is het pad van de RAG
+                        //DatabasePath + "rag_ask.py" is het pad van de python script die de RAG index gebruikt
+                        //UsePreset is een class van
+                        // public class PresetRec
+                        //{
+                        //    [PrimaryKey]
+                        //    public long Id { get; set; }
+
+                        //    public string Modal { get; set; }
+                        //    public string Rag_index { get; set; }
+                        //    public string Prompt { get; set; }
+
+                        //    public string Keys { get; set; }
+                        //    public bool Result { get; set; }
+                        //}
+
+                        ResultOllama = await RagHelper.AskPython(Clipboard.GetText(), UsePreset, DatabasePath + "rag_indexs\\EasyFActuur", DatabasePath + "rag_ask.py");
+                    }
+                    else
+                    {
+                        ResultOllama = await AskOllama(Clipboard.GetText(), UsePreset);
+                    }
+
                     if (ResultOllama != "")
                     {
-                        Clipboard.SetText(ResultOllama);
-                        Thread.Sleep(100);
-                        await WindowsInput.Simulate.Events()
-                        .ClickChord(KeyCode.LControl, KeyCode.V).Wait(50)
-                        .Invoke();
+                        if (UsePreset.Result)
+                        {
+                            textBoxLog.Text += "Result: " + "\r\n" + RagHelper.NormalizeNewLines(ResultOllama) + "\r\n";
+                        }
+                        else
+                        {
+                            Clipboard.SetText(ResultOllama);
+                            Thread.Sleep(100);
+                            await WindowsInput.Simulate.Events()
+                            .ClickChord(KeyCode.LControl, KeyCode.V).Wait(50)
+                            .Invoke();
+                        }
                     }
                 }
                 UsePreset = null;
@@ -184,8 +253,7 @@ namespace Ollamaclient
             var OllamaResult = await ollama.StreamCompletion(ThePrompt, context, stream =>
             {
                 responseBuilder.Append(stream.Response);
-            });             
-           
+            });
 
             return RemoveFirstAndLastQuotes(responseBuilder.ToString().Trim());
         }
@@ -216,7 +284,9 @@ namespace Ollamaclient
             PresetRec presetRec = (PresetRec)cbALT.SelectedItem;
             presetRec.Id = cbALT.SelectedIndex + 1;
             presetRec.Modal = cbModel.Text;
+            presetRec.Rag_index = cbRag_index.Text;
             presetRec.Prompt = tbPrompt.Text;
+            presetRec.Result = cbResult.Checked;
             cbALT.Items[cbALT.SelectedIndex] = presetRec;
             await DBFunct.PresetRecAddUpdate(presetRec);
             PresetInProgress = false;
@@ -227,13 +297,17 @@ namespace Ollamaclient
             if (PresetInProgress == true) return;
 
             cbModel.Text = "";
+            cbRag_index.Text = "";
+            cbResult.Checked = false;
             tbPrompt.Text = "";
             var presetRec = await DBFunct.PresetRecGet(cbALT.SelectedIndex + 1);
 
             if (presetRec != null)
             {
                 cbModel.Text = presetRec.Modal;
+                cbRag_index.Text = presetRec.Rag_index;
                 tbPrompt.Text = presetRec.Prompt;
+                cbResult.Checked = presetRec.Result;
             }
         }
 
@@ -245,27 +319,210 @@ namespace Ollamaclient
 
         private string RemoveFirstAndLastQuotes(string input)
         {
-
-            string TheReturn=input;
+            string TheReturn = input;
 
             TheReturn = TheReturn.Replace("```csharp", "");
             TheReturn = TheReturn.Replace("```", "");
-
 
             if (TheReturn.Length >= 2 && TheReturn[0] == '"' && TheReturn[^1] == '"')
             {
                 // Remove leading and trailing quotes
                 TheReturn = TheReturn[1..^1];
-               
             }
             return TheReturn.Trim();
-
-
         }
 
         private void FormMain_Load(object sender, EventArgs e)
         {
+            StartHttpServer(8085); // start op poort 8085
+        }
 
+        private async void StartHttpServer(int port)
+        {
+            _listener = new HttpListener();
+            _listener.Prefixes.Add($"http://+:{port}/ask/");
+            // HIER voeg je de prefix toe:
+            //  _listener.Prefixes.Add("http://+:8085/");   // of "http://localhost:8085/" voor alleen lokaal
+
+            _listener.Start();
+            textBoxLog.AppendText($"[INFO] Luistert op http://:{port}/ask{Environment.NewLine}");
+
+            while (_listener.IsListening)
+            {
+                try
+                {
+                    var ctx = await _listener.GetContextAsync();
+                    _ = Task.Run(() => HandleRequest(ctx));
+                }
+                catch (Exception ex)
+                {
+                    textBoxLog.AppendText($"[ERR] {ex.Message}{Environment.NewLine}");
+                }
+            }
+        }
+
+        private async Task HandleRequest(HttpListenerContext ctx)
+        {
+            // ===== CORS headers altijd meesturen =====
+            // Zet hier liever je eigen domein i.p.v. "*" als je wilt beperken: "https://jouwdomein.nl"
+            ctx.Response.Headers["Access-Control-Allow-Origin"] = "*";
+            ctx.Response.Headers["Access-Control-Allow-Methods"] = "POST, OPTIONS, GET";
+            ctx.Response.Headers["Access-Control-Allow-Headers"] = "Content-Type, X-Api-Key";
+
+            string path = ctx.Request.Url.AbsolutePath ?? "/";
+            bool isAskPath = path.Equals("/ask", StringComparison.OrdinalIgnoreCase)
+                          || path.Equals("/ask/", StringComparison.OrdinalIgnoreCase);
+
+            try
+            {
+                // --- Preflight (CORS) ---
+                if (ctx.Request.HttpMethod == "OPTIONS")
+                {
+                    ctx.Response.StatusCode = 204; // No Content
+                    ctx.Response.OutputStream.Close();
+                    return;
+                }
+
+                // --- Healthcheck (handig om in browser te testen) ---
+                if (ctx.Request.HttpMethod == "GET" && path.Equals("/health", StringComparison.OrdinalIgnoreCase))
+                {
+                    var payload = Encoding.UTF8.GetBytes("{\"status\":\"ok\"}");
+                    ctx.Response.ContentType = "application/json; charset=utf-8";
+                    ctx.Response.ContentLength64 = payload.Length;
+                    await ctx.Response.OutputStream.WriteAsync(payload, 0, payload.Length);
+                    ctx.Response.OutputStream.Close();
+                    return;
+                }
+
+                // --- De echte endpoint ---
+                if (ctx.Request.HttpMethod == "POST" && isAskPath)
+                {
+                    // (optioneel) simpele API-key check
+                    // var apiKey = ctx.Request.Headers["X-Api-Key"];
+                    // if (apiKey != "GEHEIME_KEY") { ctx.Response.StatusCode = 401; ... }
+
+                    // Content-Type sanity
+                    var ct = ctx.Request.ContentType ?? "";
+                    if (!ct.Contains("application/json", StringComparison.OrdinalIgnoreCase))
+                    {
+                        ctx.Response.StatusCode = 415; // Unsupported Media Type
+                        var badCt = Encoding.UTF8.GetBytes("{\"error\":\"Content-Type moet application/json zijn\"}");
+                        ctx.Response.ContentType = "application/json; charset=utf-8";
+                        ctx.Response.ContentLength64 = badCt.Length;
+                        await ctx.Response.OutputStream.WriteAsync(badCt, 0, badCt.Length);
+                        ctx.Response.OutputStream.Close();
+                        return;
+                    }
+
+                    // Body lezen
+                    string body;
+                    using (var reader = new StreamReader(ctx.Request.InputStream, ctx.Request.ContentEncoding))
+                        body = await reader.ReadToEndAsync();
+
+                    // JSON parse
+                    string question = "";
+                    try
+                    {
+                        using var doc = JsonDocument.Parse(body);
+                        question = doc.RootElement.GetProperty("question").GetString() ?? "";
+                    }
+                    catch
+                    {
+                        ctx.Response.StatusCode = 400;
+                        var badJson = Encoding.UTF8.GetBytes("{\"error\":\"Ongeldige JSON\"}");
+                        ctx.Response.ContentType = "application/json; charset=utf-8";
+                        ctx.Response.ContentLength64 = badJson.Length;
+                        await ctx.Response.OutputStream.WriteAsync(badJson, 0, badJson.Length);
+                        ctx.Response.OutputStream.Close();
+                        return;
+                    }
+
+                    if (string.IsNullOrWhiteSpace(question))
+                    {
+                        ctx.Response.StatusCode = 400;
+                        var empty = Encoding.UTF8.GetBytes("{\"error\":\"Lege vraag\"}");
+                        ctx.Response.ContentType = "application/json; charset=utf-8";
+                        ctx.Response.ContentLength64 = empty.Length;
+                        await ctx.Response.OutputStream.WriteAsync(empty, 0, empty.Length);
+                        ctx.Response.OutputStream.Close();
+                        return;
+                    }
+
+                    // Log naar je UI
+                    this.Invoke((MethodInvoker)(() =>
+                    {
+                        textBoxLog.AppendText($"Vraag ontvangen: {question}{Environment.NewLine}");
+                    }));
+
+                    // Preset → pas aan naar jouw realistische waardes/variabelen
+                    var preset =  await DBFunct.PresetRecGet(1);
+
+                    string result;
+                    try
+                    {
+                        result = await RagHelper.AskPython(
+                            question,
+                            preset,
+                            DatabasePath+"rag_indexs\\EasyFActuur",
+                            DatabasePath + "rag_ask.py"
+                        );
+                    }
+                    catch (Exception ex)
+                    {
+                        // Python/oproep ging mis
+                        ctx.Response.StatusCode = 500;
+                        var err = Encoding.UTF8.GetBytes("{\"error\":\"Serverfout: " + ex.Message.Replace("\"", "\\\"") + "\"}");
+                        ctx.Response.ContentType = "application/json; charset=utf-8";
+                        ctx.Response.ContentLength64 = err.Length;
+                        await ctx.Response.OutputStream.WriteAsync(err, 0, err.Length);
+                        ctx.Response.OutputStream.Close();
+                        return;
+                    }
+
+                    // Succes terug
+                    var respJson = System.Text.Json.JsonSerializer.Serialize(new { answer = result });
+                    var buf = Encoding.UTF8.GetBytes(respJson);
+                    ctx.Response.ContentType = "application/json; charset=utf-8";
+                    ctx.Response.ContentLength64 = buf.Length;
+                    await ctx.Response.OutputStream.WriteAsync(buf, 0, buf.Length);
+                    ctx.Response.OutputStream.Close();
+                    return;
+                }
+
+                // Niet gevonden / niet toegestaan
+                ctx.Response.StatusCode = 404;
+                var notFound = Encoding.UTF8.GetBytes("{\"error\":\"Niet gevonden\"}");
+                ctx.Response.ContentType = "application/json; charset=utf-8";
+                ctx.Response.ContentLength64 = notFound.Length;
+                await ctx.Response.OutputStream.WriteAsync(notFound, 0, notFound.Length);
+                ctx.Response.OutputStream.Close();
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    ctx.Response.StatusCode = 500;
+                    var err = Encoding.UTF8.GetBytes("{\"error\":\"Serverfout: " + ex.Message.Replace("\"", "\\\"") + "\"}");
+                    ctx.Response.ContentType = "application/json; charset=utf-8";
+                    ctx.Response.ContentLength64 = err.Length;
+                    await ctx.Response.OutputStream.WriteAsync(err, 0, err.Length);
+                    ctx.Response.OutputStream.Close();
+                }
+                catch
+                {
+                    // laatste redmiddel: niets meer doen
+                }
+            }
+        }
+
+
+        private void FormMain_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (_listener != null && _listener.IsListening)
+            {
+                _listener.Stop();
+                _listener.Close();
+            }
         }
     }
 }

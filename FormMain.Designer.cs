@@ -35,6 +35,10 @@
             cbLog = new CheckBox();
             btnSaveURL = new Button();
             panel1 = new Panel();
+            cbResult = new CheckBox();
+            label6 = new Label();
+            cbRag_index = new ComboBox();
+            rag_indexs = new Label();
             btnSave = new Button();
             label4 = new Label();
             label3 = new Label();
@@ -94,6 +98,10 @@
             // panel1
             // 
             panel1.BorderStyle = BorderStyle.FixedSingle;
+            panel1.Controls.Add(cbResult);
+            panel1.Controls.Add(label6);
+            panel1.Controls.Add(cbRag_index);
+            panel1.Controls.Add(rag_indexs);
             panel1.Controls.Add(btnSave);
             panel1.Controls.Add(label4);
             panel1.Controls.Add(label3);
@@ -106,9 +114,44 @@
             panel1.Size = new Size(824, 259);
             panel1.TabIndex = 13;
             // 
+            // cbResult
+            // 
+            cbResult.AutoSize = true;
+            cbResult.Location = new Point(96, 230);
+            cbResult.Name = "cbResult";
+            cbResult.Size = new Size(15, 14);
+            cbResult.TabIndex = 23;
+            cbResult.UseVisualStyleBackColor = true;
+            // 
+            // label6
+            // 
+            label6.Location = new Point(-5, 230);
+            label6.Name = "label6";
+            label6.Size = new Size(96, 15);
+            label6.TabIndex = 22;
+            label6.Text = "Result 2 Log";
+            label6.TextAlign = ContentAlignment.TopRight;
+            // 
+            // cbRag_index
+            // 
+            cbRag_index.FormattingEnabled = true;
+            cbRag_index.Location = new Point(97, 95);
+            cbRag_index.Name = "cbRag_index";
+            cbRag_index.Size = new Size(674, 23);
+            cbRag_index.TabIndex = 21;
+            // 
+            // rag_indexs
+            // 
+            rag_indexs.Location = new Point(-5, 98);
+            rag_indexs.Name = "rag_indexs";
+            rag_indexs.Size = new Size(96, 15);
+            rag_indexs.TabIndex = 20;
+            rag_indexs.Text = "Rag_indexs";
+            rag_indexs.TextAlign = ContentAlignment.TopRight;
+            // 
             // btnSave
             // 
-            btnSave.Location = new Point(721, 214);
+            btnSave.Location = new Point(721, 227);
             btnSave.Name = "btnSave";
             btnSave.Size = new Size(50, 23);
             btnSave.TabIndex = 19;
@@ -118,7 +161,7 @@
             // 
             // label4
             // 
-            label4.Location = new Point(-5, 106);
+            label4.Location = new Point(-5, 125);
             label4.Name = "label4";
             label4.Size = new Size(96, 15);
             label4.TabIndex = 18;
@@ -145,17 +188,17 @@
             // 
             // tbPrompt
             // 
-            tbPrompt.Location = new Point(97, 103);
+            tbPrompt.Location = new Point(96, 131);
             tbPrompt.Multiline = true;
             tbPrompt.Name = "tbPrompt";
             tbPrompt.ScrollBars = ScrollBars.Vertical;
-            tbPrompt.Size = new Size(675, 105);
+            tbPrompt.Size = new Size(675, 83);
             tbPrompt.TabIndex = 15;
             // 
             // cbModel
             // 
             cbModel.FormattingEnabled = true;
-            cbModel.Location = new Point(97, 64);
+            cbModel.Location = new Point(97, 63);
             cbModel.Name = "cbModel";
             cbModel.Size = new Size(674, 23);
             cbModel.TabIndex = 14;
@@ -184,6 +227,7 @@
             Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "FormMain";
             Text = "OllamaClient";
+            FormClosing += FormMain_FormClosing;
             FormClosed += Form1_FormClosed;
             Load += FormMain_Load;
             panel1.ResumeLayout(false);
@@ -208,5 +252,9 @@
         private TextBox tbPrompt;
         private ComboBox cbModel;
         private ComboBox cbALT;
+        private ComboBox cbRag_index;
+        private Label rag_indexs;
+        private Label label6;
+        private CheckBox cbResult;
     }
 }

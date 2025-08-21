@@ -36,8 +36,8 @@ namespace Ollamaclient.SQLiteDatabase
             if (db != null)
                 return;
 
-            var databasePath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "OllamaClient.db");
-            db = new SQLiteAsyncConnection(databasePath);
+           
+            db = new SQLiteAsyncConnection(FormMain.DatabasePath+ "OllamaClient.db");
 
             await db.CreateTableAsync<SettingRec>();
             await db.CreateTableAsync<PresetRec>();
