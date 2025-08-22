@@ -334,7 +334,9 @@ namespace Ollamaclient
 
         private void FormMain_Load(object sender, EventArgs e)
         {
-            StartHttpServer(8085); // start op poort 8085
+            StartHttpServer(80); // start op poort 8085
+            //textBoxLog.Font = new Font("Courier New", 10);
+            textBoxLog.Font = new Font("Consolas", 10, FontStyle.Regular);
         }
 
         private async void StartHttpServer(int port)
@@ -345,7 +347,19 @@ namespace Ollamaclient
             //  _listener.Prefixes.Add("http://+:8085/");   // of "http://localhost:8085/" voor alleen lokaal
 
             _listener.Start();
-            textBoxLog.AppendText($"[INFO] Luistert op http://:{port}/ask{Environment.NewLine}");
+            try
+            {
+                if (textBoxLog != null && !textBoxLog.IsDisposed)
+                {
+                    textBoxLog.AppendText($"[INFO] Luistert op http://:{port}/ask{Environment.NewLine}");
+                }
+            }
+            catch (Exception)
+            {
+
+                // throw;
+            }
+
 
             while (_listener.IsListening)
             {
@@ -356,7 +370,10 @@ namespace Ollamaclient
                 }
                 catch (Exception ex)
                 {
-                    textBoxLog.AppendText($"[ERR] {ex.Message}{Environment.NewLine}");
+                    if (textBoxLog != null && !textBoxLog.IsDisposed)
+                    {
+                        textBoxLog.AppendText($"[ERR] {ex.Message}{Environment.NewLine}");
+                    }
                 }
             }
         }
@@ -448,14 +465,17 @@ namespace Ollamaclient
                         return;
                     }
 
-                    // Log naar je UI
                     this.Invoke((MethodInvoker)(() =>
                     {
-                        textBoxLog.AppendText($"Vraag ontvangen: {question}{Environment.NewLine}");
+                        var ip = ctx.Request.RemoteEndPoint?.Address.ToString() ?? "onbekend";
+
+
+                        LogMessage($"[{ip}] incoming question: {question}");
+                       
                     }));
 
                     // Preset → pas aan naar jouw realistische waardes/variabelen
-                    var preset =  await DBFunct.PresetRecGet(1);
+                    var preset = await DBFunct.PresetRecGet(1);
 
                     string result;
                     try
@@ -463,7 +483,7 @@ namespace Ollamaclient
                         result = await RagHelper.AskPython(
                             question,
                             preset,
-                            DatabasePath+"rag_indexs\\EasyFActuur",
+                            DatabasePath + "rag_indexs\\EasyFActuur",
                             DatabasePath + "rag_ask.py"
                         );
                     }
@@ -480,7 +500,14 @@ namespace Ollamaclient
                     }
 
                     // Succes terug
+                    textBoxLog.Invoke((Action)(() =>
+                    {
+                        LogMessage($"Answer: {Environment.NewLine}{result}");
+                    }));
+
+
                     var respJson = System.Text.Json.JsonSerializer.Serialize(new { answer = result });
+
                     var buf = Encoding.UTF8.GetBytes(respJson);
                     ctx.Response.ContentType = "application/json; charset=utf-8";
                     ctx.Response.ContentLength64 = buf.Length;
@@ -516,6 +543,30 @@ namespace Ollamaclient
         }
 
 
+        private void LogMessage(string message)
+        {
+            message = RagHelper.NormalizeNewLines(message);
+
+            // Datum/tijd toevoegen in formaat dd-MM HH:mm:ss
+            string timestamp = DateTime.Now.ToString("dd-MM HH:mm:ss");
+            message = $"[{timestamp}] {message}";
+
+            if (textBoxLog.InvokeRequired)
+            {
+                textBoxLog.Invoke((Action)(() => LogMessage(message)));
+            }
+            else
+            {
+                textBoxLog.AppendText(message + Environment.NewLine);
+                textBoxLog.SelectionStart = textBoxLog.Text.Length;  // caret naar einde
+                textBoxLog.ScrollToCaret();                          // en scrollen
+            }
+        }
+
+
+
+
+
         private void FormMain_FormClosing(object sender, FormClosingEventArgs e)
         {
             if (_listener != null && _listener.IsListening)
@@ -523,6 +574,17 @@ namespace Ollamaclient
                 _listener.Stop();
                 _listener.Close();
             }
+        }
+
+        private void flowLayoutPanel1_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        private void FormMain_SizeChanged(object sender, EventArgs e)
+        {
+            textBoxLog.Width = Width - (textBoxLog.Left + 50);
+            textBoxLog.Height = Height - (textBoxLog.Top + 70);
         }
     }
 }
