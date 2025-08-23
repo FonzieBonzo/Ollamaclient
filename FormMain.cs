@@ -410,12 +410,12 @@ namespace Ollamaclient
                     ctx.Response.OutputStream.Close();
                     return;
                 }
-
+                var apiKey = "";
                 // --- De echte endpoint ---
                 if (ctx.Request.HttpMethod == "POST" && isAskPath)
                 {
                     // (optioneel) simpele API-key check
-                    // var apiKey = ctx.Request.Headers["X-Api-Key"];
+                    apiKey = ctx.Request.Headers["X-Api-Key"];
                     // if (apiKey != "GEHEIME_KEY") { ctx.Response.StatusCode = 401; ... }
 
                     // Content-Type sanity
@@ -438,9 +438,11 @@ namespace Ollamaclient
 
                     // JSON parse
                     string question = "";
+                    string api_key = "";
                     try
                     {
                         using var doc = JsonDocument.Parse(body);
+                        question = doc.RootElement.GetProperty("question").GetString() ?? "";
                         question = doc.RootElement.GetProperty("question").GetString() ?? "";
                     }
                     catch
@@ -470,8 +472,8 @@ namespace Ollamaclient
                         var ip = ctx.Request.RemoteEndPoint?.Address.ToString() ?? "onbekend";
 
 
-                        LogMessage($"[{ip}] incoming question: {question}");
-                       
+                        LogMessage($"[{apiKey}] incoming question: {question}");
+
                     }));
 
                     // Preset → pas aan naar jouw realistische waardes/variabelen
@@ -585,6 +587,55 @@ namespace Ollamaclient
         {
             textBoxLog.Width = Width - (textBoxLog.Left + 50);
             textBoxLog.Height = Height - (textBoxLog.Top + 70);
+        }
+
+
+
+        private async void btnAsk_Click(object sender, EventArgs e)
+        {
+            labelProcessing.Visible = true;
+
+            // var index = keyMap[e.Data.KeyDown.Key];
+            //textBoxLog.Text += $"ALT+{index + 1}\r\n";
+            UsePreset = (PresetRec)cbALT.Items[cbALT.SelectedIndex];
+
+
+
+            string ResultOllama = "";
+
+            if (UsePreset.Rag_index != "None" && UsePreset.Rag_index != "")
+            {
+                //Clipboard.GetText() bevat de vraag,
+                //DatabasePath + "rag_indexs\\EasyFactuur" is het pad van de RAG
+                //DatabasePath + "rag_ask.py" is het pad van de python script die de RAG index gebruikt
+                //UsePreset is een class van
+                // public class PresetRec
+                //{
+                //    [PrimaryKey]
+                //    public long Id { get; set; }
+
+                //    public string Modal { get; set; }
+                //    public string Rag_index { get; set; }
+                //    public string Prompt { get; set; }
+
+                //    public string Keys { get; set; }
+                //    public bool Result { get; set; }
+                //}
+
+                ResultOllama = await RagHelper.AskPython(tbAsk.Text, UsePreset, DatabasePath + "rag_indexs\\EasyFActuur", DatabasePath + "rag_ask.py");
+            }
+            else
+            {
+                ResultOllama = await AskOllama(tbAsk.Text, UsePreset);
+            }
+
+            if (ResultOllama != "")
+            {
+               
+                    textBoxLog.Text += "Result: " + "\r\n" + RagHelper.NormalizeNewLines(ResultOllama) + "\r\n";
+               
+            }
+            labelProcessing.Visible = false;
         }
     }
 }

@@ -46,12 +46,16 @@
             label6 = new Label();
             cbResult = new CheckBox();
             panel1 = new Panel();
+            tbAsk = new TextBox();
+            btnAsk = new Button();
+            label5 = new Label();
+            labelProcessing = new Label();
             panel1.SuspendLayout();
             SuspendLayout();
             // 
             // textBoxLog
             // 
-            textBoxLog.Location = new Point(113, 340);
+            textBoxLog.Location = new Point(113, 449);
             textBoxLog.Margin = new Padding(10);
             textBoxLog.Multiline = true;
             textBoxLog.Name = "textBoxLog";
@@ -63,7 +67,7 @@
             // 
             cbLog.AutoSize = true;
             cbLog.CheckAlign = ContentAlignment.MiddleRight;
-            cbLog.Location = new Point(39, 342);
+            cbLog.Location = new Point(39, 451);
             cbLog.Name = "cbLog";
             cbLog.Size = new Size(46, 19);
             cbLog.TabIndex = 10;
@@ -214,11 +218,54 @@
             panel1.Size = new Size(824, 247);
             panel1.TabIndex = 13;
             // 
+            // tbAsk
+            // 
+            tbAsk.Location = new Point(113, 318);
+            tbAsk.Margin = new Padding(10);
+            tbAsk.Multiline = true;
+            tbAsk.Name = "tbAsk";
+            tbAsk.ScrollBars = ScrollBars.Vertical;
+            tbAsk.Size = new Size(563, 87);
+            tbAsk.TabIndex = 14;
+            // 
+            // btnAsk
+            // 
+            btnAsk.Location = new Point(689, 385);
+            btnAsk.Name = "btnAsk";
+            btnAsk.Size = new Size(62, 23);
+            btnAsk.TabIndex = 15;
+            btnAsk.Text = "Ask";
+            btnAsk.UseVisualStyleBackColor = true;
+            btnAsk.Click += btnAsk_Click;
+            // 
+            // label5
+            // 
+            label5.Location = new Point(4, 321);
+            label5.Name = "label5";
+            label5.Size = new Size(96, 15);
+            label5.TabIndex = 18;
+            label5.Text = "Question :";
+            label5.TextAlign = ContentAlignment.TopRight;
+            // 
+            // labelProcessing
+            // 
+            labelProcessing.AutoSize = true;
+            labelProcessing.Location = new Point(757, 389);
+            labelProcessing.Name = "labelProcessing";
+            labelProcessing.Size = new Size(70, 15);
+            labelProcessing.TabIndex = 19;
+            labelProcessing.Text = "Processing..";
+            labelProcessing.Visible = false;
+            // 
             // FormMain
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(858, 565);
+            ClientSize = new Size(874, 663);
+            Controls.Add(labelProcessing);
+            Controls.Add(label5);
+            Controls.Add(btnAsk);
+            Controls.Add(tbAsk);
             Controls.Add(panel1);
             Controls.Add(btnSaveURL);
             Controls.Add(cbLog);
@@ -258,5 +305,8 @@
         private Label label6;
         private CheckBox cbResult;
         private Panel panel1;
+        private TextBox tbAsk;
+        private Button btnAsk;
+        private Label labelProcessing;
     }
 }
